@@ -221,8 +221,8 @@ int main(int argc, char** argv)
         acc = Mat::zeros(pt, CV_16UC1); //16 bits for accumulatio matrix
         RGBtoGrayScale(frame,&grayscale);
         GaussianBlur(grayscale, grayscale, Size(9,9), 1.5, 1.5);
-        Sobel1(grayscale,filterGX,filterGY,3, &sobel, 20); //sobel filter, not optimized though
-        // SobelED(grayscale,&sobel,20); //simple filter use for testing only, not mean to be used with hough transform
+        // Sobel1(grayscale,filterGX,filterGY,3, &sobel, 20); //sobel filter, not optimized though
+        SobelED(grayscale,&sobel,20); //simple filter use for testing only, not mean to be used with hough transform
         //Canny( grayscale, sobel, 60, 60*3,3); //opencv canny filter, use to compare performances
         simpleHough(sobel,&acc,&frame);
         gettimeofday(&end,NULL);
