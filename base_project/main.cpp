@@ -10,22 +10,6 @@ using namespace cv;
 
 #define VIDEO 1
 
-double cosVals[180];
-double sinVals[180];
-
-/**
- * Fill the cosVals and sinVals arrays with consinus and sinus values of each value of theta
- */
-void computeTrigValues()
-{
-    for (int theta = 0; theta < 180; theta++)
-    {
-        double x = (double)theta * PI / 180;
-        cosVals[theta] = cos(x);
-        sinVals[theta] = sin(x);
-    }
-}
-
 void Sobel1(Mat frame, int* filterGX, int* filterGY, int size, Mat* out, int limit)
 {
 
@@ -34,8 +18,8 @@ void Sobel1(Mat frame, int* filterGX, int* filterGY, int size, Mat* out, int lim
     float sumX, sumY;
     for (int y = 1;y < frame.cols - 1;y++)
     {
-        for (int x = 1;x < frame.rows - 1;x++)
-        {
+        for (int x = 1;x < frame.rows - 1;x++)        
+{
             sumX = 0;
             sumY = 0;
             /*
@@ -135,9 +119,9 @@ void simpleHough(Mat frame, Mat* acc, Mat* f)
         {
             if (frame.data[i * step + j] != 0)
             {
-                for (int theta = 0;theta < 180; theta += thetaStep)
-                {
-                    rho = j * cosVals[theta] + i * sinVals[theta];
+                for (int theta = 0;theta < 180; theta += thetaStep)                
+{
+                    rho = j * cos((double)theta * PI / 180) + i * sin((double)theta * PI / 180);
                     if (rho != 0)
                         acc->at<ushort>(Point(cvRound(rho), (int)cvRound(theta / thetaStep))) += 1;
                 }
@@ -152,16 +136,16 @@ void simpleHough(Mat frame, Mat* acc, Mat* f)
     Point pt1, pt2;
     double a, b;
     double x0, y0;
-    int theta;
+    double theta;
     acc->data[max_loc_old.y * stepacc + max_loc_old.x] = 0;
     for (int i = 0;i < 40;i++)
     {
         cv::minMaxLoc(*acc, &min, &max, &min_loc, &max_loc);
         if (abs(max_loc_old.x - max_loc.x) > 5 || abs(max_loc_old.y - max_loc.y) > 5)
         { //might be interesting to use that ....
-            theta = max_loc.y * thetaStep;
-            a = cosVals[theta]; //compute hough inverse transform from polar to cartesian
-            b = sinVals[theta];
+            theta = (double)max_loc.y * thetaStep;
+            a = cos(theta * PI / 180); //compute hough inverse transform from polar to cartesian
+            b = sin(theta * PI / 180);
             x0 = a * max_loc.x;
             y0 = b * max_loc.x;
             pt1.x = cvRound(x0 + 1000 * (-b)); //compute first point belonging to the line
@@ -173,8 +157,8 @@ void simpleHough(Mat frame, Mat* acc, Mat* f)
             max_loc_old.x = max_loc.x;
             max_loc_old.y = max_loc.y;
         }
-        else
-        {
+        else        
+{
             acc->at<ushort>(Point(max_loc.x, max_loc.y)) = 0;
             i--;
         }
@@ -185,7 +169,6 @@ void simpleHough(Mat frame, Mat* acc, Mat* f)
 
 int main(int argc, char** argv)
 {
-    computeTrigValues();
 
     timeval start, end;
     printf("OK !\n");
