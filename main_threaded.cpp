@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <iostream>
 #include <pthread.h>
+#include <mutex>
 #include "opencv2/opencv.hpp"
+#include "optim_threads.h"
 using namespace cv;
 
 #include <sys/time.h>
@@ -9,7 +11,7 @@ using namespace cv;
 #define PI 3.14159265
 #define thetaStep 4
 
-#define VIDEO 0
+#define VIDEO 1
 
 double cosVals[180];
 double sinVals[180];
@@ -24,79 +26,6 @@ void computeTrigValues()
         double x = (double)theta * PI / 180;
         cosVals[theta] = cos(x);
         sinVals[theta] = sin(x);
-    }
-}
-
-void Sobel1(Mat frame, int* filterGX, int* filterGY, int size, Mat* out, int limit)
-{
-
-    //Convolution Time ! (adding threshold to result might improve performances significantly)
-    int step = std::floor(size / 2);
-    float sumX, sumY;
-    for (int y = 1;y < frame.cols - 1;y++)
-    {
-        for (int x = 1;x < frame.rows - 1;x++)
-        {
-            sumX = 0;
-            sumY = 0;
-            /*
-            sumX = -frame.at<uchar>(Point(y-1,x-1))
-                    -2*frame.at<uchar>(Point(y,x-1))
-                    -frame.at<uchar>(Point(y+1,x-1))+
-                    frame.at<uchar>(Point(y-1,x+1))+
-                    2*frame.at<uchar>(Point(y,x+1))+
-                    frame.at<uchar>(Point(y+1,x+1));
-            sumY = -frame.at<uchar>(Point(y-1,x-1))
-                    -2*frame.at<uchar>(Point(y-1,x))
-                    -frame.at<uchar>(Point(y-1,x+1))+
-                    frame.at<uchar>(Point(y+1,x-1))+
-                    2*frame.at<uchar>(Point(y+1,x))+
-                    frame.at<uchar>(Point(y+1,x+1));
-            */
-            for (int i = 0;i < size;i++)
-            {
-                for (int j = 0;j < size;j++)
-                {
-                    sumX += filterGX[i * size + j] * frame.at<uchar>(Point(y - step + i, x - step + j));
-                    sumY += filterGY[i * size + j] * frame.at<uchar>(Point(y - step + i, x - step + j));
-                }
-            }
-            out->at<uchar>(Point(y, x)) = sqrt(pow(sumX, 2) + pow(sumY, 2)) / 4;
-
-            if (sqrt(pow(sumX, 2) + pow(sumY, 2)) / 4 < limit)
-                out->at<uchar>(Point(y, x)) = 0;
-            //else
-              //out->at<uchar>(Point(y,x)) = 0;
-
-        }
-    }
-}
-
-void SobelED(Mat frame, Mat* out, int limit)
-{
-
-    if (limit > 255 || limit < 0)
-        limit = 255;
-    float sumX, sumY;
-    for (int y = 1;y < frame.cols - 1;y++)
-    {
-        for (int x = 1;x < frame.rows - 1;x++)
-        {
-            sumX = 0;
-            sumY = 0;
-            sumX = frame.at<uchar>(Point(y, x + 1)) - frame.at<uchar>(Point(y, x - 1));
-            sumY = frame.at<uchar>(Point(y + 1, x)) - frame.at<uchar>(Point(y - 1, x));
-
-            if (sqrt(pow(sumX, 2) + pow(sumY, 2)) > limit)
-            {
-                out->at<uchar>(Point(y, x)) = 255;
-            }
-
-            else
-            {
-                out->at<uchar>(Point(y, x)) = 0;
-            }
-        }
     }
 }
 
@@ -182,8 +111,6 @@ void simpleHough(Mat frame, Mat* acc, Mat* f)
     }
 }
 
-
-
 int main(int argc, char** argv)
 {
     computeTrigValues();
@@ -213,11 +140,10 @@ int main(int argc, char** argv)
         return -1;
     }
 #endif
-
-
     printf("setup\n");
     int x = frame.rows;
     int y = frame.cols;
+
     Size pt = Size(sqrt(pow(x, 2) + pow(y, 2)) * 2, ceil(180 / thetaStep));
     printf("rows : %d, cols : %d \n", frame.rows, frame.cols);
     Mat acc = Mat::zeros(pt, CV_16UC1);
@@ -242,7 +168,7 @@ int main(int argc, char** argv)
 #if VIDEO==0 //if image mode selected, must have image path as first argument
     RGBtoGrayScale(frame, &grayscale);
     GaussianBlur(grayscale, grayscale, Size(9, 9), 2, 2);
-    Sobel1(grayscale, filterGX, filterGY, convSize, &sobel, 25);
+    SobelMultiThread(&grayscale, filterGX, filterGY, 3, 20, &sobel);
     //Canny( grayscale, sobel, 60, 60*3,3);
     //SobelED(grayscale,&sobel,20);
     simpleHough(sobel, &acc, &frame);
@@ -252,16 +178,32 @@ int main(int argc, char** argv)
     imshow("Acc Frame", acc);
     waitKey(0); //wait for key pressed in order to propely close all opencv windows
 #else //if video selected, no needs of arguments in the program call
+
+    // Threads threads;
+    // pthread_create(&threads.thread_sobelTopLeft, NULL, thread_sobelTopLeft, NULL);
+    // pthread_create(&threads.thread_sobelTopRight, NULL, thread_sobelTopRight, NULL);
+    // pthread_create(&threads.thread_sobelBottomLeft, NULL, thread_sobelBottomLeft, NULL);
+    // pthread_create(&threads.thread_sobelBottomRight, NULL, thread_sobelBottomRight, NULL);
+
     for (;;)
     {
         Mat res;
         gettimeofday(&start, NULL);
         cap >> frame; // get a new frame from camera
         acc = Mat::zeros(pt, CV_16UC1); //16 bits for accumulatio matrix
+
+
+        // Split image in 4
+        int midRows = frame.rows / 2;
+        int midCols = frame.cols / 2;
+
         RGBtoGrayScale(frame, &grayscale);
         GaussianBlur(grayscale, grayscale, Size(9, 9), 1.5, 1.5);
-        // Sobel1(grayscale,filterGX,filterGY,3, &sobel, 20); //sobel filter, not optimized though
-        SobelED(grayscale, &sobel, 20); //simple filter use for testing only, not mean to be used with hough transform
+        // Sobel1(grayscale, 1, frame.rows - 1, 1, frame.cols - 1, filterGX, filterGY, 3, &sobel, 20); //sobel filter, not optimized though
+
+        SobelMultiThread(&grayscale, filterGX, filterGY, 3, 20, &sobel);
+
+        // SobelED(grayscale, &sobel, 20); //simple filter use for testing only, not mean to be used with hough transform
         //Canny( grayscale, sobel, 60, 60*3,3); //opencv canny filter, use to compare performances
         simpleHough(sobel, &acc, &frame);
         gettimeofday(&end, NULL);

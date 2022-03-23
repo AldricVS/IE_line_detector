@@ -1,5 +1,5 @@
 # File executable
-main
+bin/**
 
 # VS Code
 .vscode/*
