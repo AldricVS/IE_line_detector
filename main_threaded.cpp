@@ -7,18 +7,13 @@
 #include "opencv2/opencv.hpp"
 
 #include "optim/optim.h"
+#include "metrics/metrics.h"
 
 using namespace cv;
 
 #define thetaStep 4
 
 #define VIDEO 1
-
-int diff_ms(timeval t1, timeval t2)
-{
-    return (((t1.tv_sec - t2.tv_sec) * 1000000) +
-        (t1.tv_usec - t2.tv_usec)) / 1000;
-}
 
 // Convert RGB image to grayscale using the luminosity method
 void RGBtoGrayScale(Mat rgb, Mat* grayscale)
@@ -34,7 +29,6 @@ int main(int argc, char** argv)
     optimAlgos::computeTrigValues(cosValues, sinValues, 180);
 
     timeval start, end;
-    printf("OK !\n");
     char name[50];
     Mat frame;
     Mat canny;
@@ -126,7 +120,7 @@ int main(int argc, char** argv)
         // simpleHough(sobel, &acc, &frame);
         optimAlgos::houghMemoized(sobel, &acc, cosValues, sinValues, thetaStep, &frame);
         gettimeofday(&end, NULL);
-        int ms = diff_ms(end, start);
+        int ms = metrics::diff_ms(end, start);
         //normalize(acc,acc,0,255,NORM_MINMAX, CV_16UC1); //normalize mat, use at your discretion
         sprintf(name, "fps : %f", 1 / ((double)ms / 1000));
         putText(frame, name, cv::Point(30, 30), FONT_HERSHEY_COMPLEX_SMALL, 0.8, cv::Scalar(20, 20, 25), 1, LINE_AA);
