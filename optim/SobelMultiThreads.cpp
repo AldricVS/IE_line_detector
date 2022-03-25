@@ -1,4 +1,6 @@
-#include "optim_threads.h"
+#include "optim.h"
+
+#include <pthread.h>
 
 using namespace cv;
 
@@ -74,7 +76,7 @@ void* threadSobel(void* thread_process_infos)
     return NULL;
 }
 
-void SobelMultiThread(cv::Mat* frame, int* filterGX, int* filterGY, int size, int limit, cv::Mat* out)
+void optimAlgos::SobelMultiThread(cv::Mat* frame, int* filterGX, int* filterGY, int size, int limit, cv::Mat* out)
 {
     int midRows = frame->rows / 2;
     int midCols = frame->cols / 2;
