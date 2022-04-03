@@ -16,8 +16,8 @@ double metrics::differenceBetween(cv::Mat image1, cv::Mat image2)
     {
         for (int x = 0; x < image1.cols; x++)
         {
-            auto pixel1 = image1.at<cv::Vec3b>(Point(y, x));
-            auto pixel2 = image2.at<cv::Vec3b>(Point(y, x));
+            auto pixel1 = image1.at<cv::Vec3b>(Point(x, y));
+            auto pixel2 = image2.at<cv::Vec3b>(Point(x, y));
             if (pixel1 == pixel2)
             {
                 identicalPixelCount++;

@@ -15,6 +15,9 @@ int convSize = 3;
 int thetaStep = 4;
 int limit = 20;
 
+#define thetaStep 4
+
+
 const string WINDOW_COLOR_NAME = "Color Frame";
 const string WINDOW_SOBEL_NAME = "Sobel Frame";
 const string WINDOW_ACC_NAME = "Acc Frame";
@@ -50,7 +53,7 @@ int main(int argc, char const *argv[])
     timeval start, end;
     cout << "Read image " << argv[1] << endl;
     Mat baseAlgoFrame = readImage(argv[1]);
-
+    Mat optimisedAlgoframe = readImage(argv[1]);
     int x = baseAlgoFrame.cols, y = baseAlgoFrame.rows;
     Size pt = Size(sqrt(pow(x, 2) + pow(y, 2)) * 2, ceil(180 / thetaStep));
 
@@ -64,7 +67,7 @@ int main(int argc, char const *argv[])
     namedWindow(WINDOW_ACC_NAME);
 
     // BASE ALGORITHM
-    printf("Process base algorithm\n");
+    printf("-> Process base algorithm\n");
     gettimeofday(&start, NULL);
 
     acc = createAccMatrix(pt);
@@ -79,18 +82,33 @@ int main(int argc, char const *argv[])
 
     imshow(WINDOW_COLOR_NAME, baseAlgoFrame);  // Show our image with hough line detection
     imshow(WINDOW_SOBEL_NAME, sobel);
-    imshow(WINDOW_ACC_NAME, acc);
+    //imshow(WINDOW_ACC_NAME, acc);
     waitKey(); //wait for key pressed in order to propely close all opencv windows
 
-    // optimAlgos::SobelMultiThread(&grayscale, filterGX, filterGY, 3, 20, &sobel);
-    // //Canny( grayscale, sobel, 60, 60*3,3);
-    // //SobelED(grayscale,&sobel,20);
-    // simpleHough(sobel, &acc, &frame);
+    // OPTIMISED ALGO
+    timeval startoptim, endoptim;
 
-    // imshow("Color Frame", frame);  // Show our image with hough line detection
-    // imshow("Sobel Frame", sobel);
-    // imshow("Acc Frame", acc);
-    // waitKey(0); //wait for key pressed in order to propely close all opencv windows
+    printf("-> Starting optimised algos\n");
+    gettimeofday(&startoptim, NULL);
+    optimAlgos::SobelMultiThread(&grayscale, filterGX, filterGY, 3, 20, &sobel);
+    Canny( grayscale, sobel, 60, 60*3,3);
+    //optimAlgos::SobelED(grayscale,&sobel,20);
+    optimAlgos::houghMemoized(sobel, &acc, cosValues, sinValues, thetaStep,&optimisedAlgoframe);
+    gettimeofday(&endoptim, NULL);
+    int optimisedtimeMs = metrics::diff_ms(endoptim, startoptim);
+    printf("Process done in %d milliseconds\n", optimisedtimeMs);
+
+
+    imshow("Color Frame", optimisedAlgoframe);  // Show our image with hough line detection
+    imshow("Sobel Frame", sobel);
+    //imshow("Acc Frame", acc);
+    waitKey(0); //wait for key pressed in order to propely close all opencv windows
+
+
+    // Comparison of both images
+    printf("-> Precision of the optimised algorithm\n");
+    double precision = metrics::differenceBetween(baseAlgoFrame,optimisedAlgoframe);
+    printf("Precision is : %lf\n", precision);
 
     return 0;
 }

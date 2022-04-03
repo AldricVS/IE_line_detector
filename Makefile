@@ -17,7 +17,7 @@ BASE_ALGO_FILES = $(wildcard ./base_algos/*.cpp)
 METRIC_FILES = $(wildcard ./metrics/*.cpp)
 
 main : main.cpp
-	g++ -o bin/main main.cpp `pkg-config --cflags --libs opencv` -g -Wall
+	g++ -o bin/main main.cpp $(OPTIM_FILES) $(BASE_ALGO_FILES) $(METRIC_FILES) `pkg-config --cflags --libs opencv` -g -Wall
 
 main_threaded : 
 	g++ -o bin/main_threaded main_threaded.cpp $(OPTIM_FILES) $(BASE_ALGO_FILES) $(METRIC_FILES) `pkg-config --cflags --libs opencv` -lpthread -g -Wall
