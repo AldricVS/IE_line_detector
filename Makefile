@@ -1,4 +1,4 @@
-all : main main_threaded
+all : main main_threaded compare
 
 VERSION = 0.3
 DIR_OBJ = ./objs
