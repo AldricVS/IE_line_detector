@@ -11,7 +11,7 @@
 
 using namespace cv;
 
-#define thetaStep 4
+#define thetaStep 1
 
 #define VIDEO 1
 

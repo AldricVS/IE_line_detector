@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <iostream>
-#include <pthread.h>
 #include <sys/time.h>
 
 #include "opencv2/opencv.hpp"

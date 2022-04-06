@@ -12,7 +12,6 @@ using namespace std;
 int filterGX[9] = { -1,0,1,-2,0,2,-1,0,1 };
 int filterGY[9] = { -1,-2,-1,0,0,0,1,2,1 };
 int convSize = 3;
-int thetaStep = 4;
 int limit = 20;
 
 #define thetaStep 4
@@ -94,7 +93,7 @@ int main(int argc, char const *argv[])
     RGBtoGrayScale(optimisedAlgoframe, &grayscale);
     GaussianBlur(grayscale, grayscale, Size(9, 9), 2, 2);
     optimAlgos::SobelMultiThread(&grayscale, filterGX, filterGY, 3, 20, &sobel);
-    optimAlgos::houghMemoized(sobel, &acc, cosValues, sinValues, thetaStep,&optimisedAlgoframe);
+    optimAlgos::houghMemoized(sobel, &acc, cosValues, sinValues, 16,&optimisedAlgoframe);
     gettimeofday(&endoptim, NULL);
     int optimisedtimeMs = metrics::diff_ms(endoptim, startoptim);
     printf("Process done in %d milliseconds\n", optimisedtimeMs);
