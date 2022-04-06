@@ -89,10 +89,11 @@ int main(int argc, char const *argv[])
     timeval startoptim, endoptim;
 
     printf("-> Starting optimised algos\n");
+    acc = createAccMatrix(pt);
     gettimeofday(&startoptim, NULL);
+    RGBtoGrayScale(optimisedAlgoframe, &grayscale);
+    GaussianBlur(grayscale, grayscale, Size(9, 9), 2, 2);
     optimAlgos::SobelMultiThread(&grayscale, filterGX, filterGY, 3, 20, &sobel);
-    Canny( grayscale, sobel, 60, 60*3,3);
-    //optimAlgos::SobelED(grayscale,&sobel,20);
     optimAlgos::houghMemoized(sobel, &acc, cosValues, sinValues, thetaStep,&optimisedAlgoframe);
     gettimeofday(&endoptim, NULL);
     int optimisedtimeMs = metrics::diff_ms(endoptim, startoptim);
