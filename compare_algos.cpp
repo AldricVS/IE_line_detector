@@ -84,6 +84,8 @@ int main(int argc, char const *argv[])
     //imshow(WINDOW_ACC_NAME, acc);
     waitKey(); //wait for key pressed in order to propely close all opencv windows
 
+    // WITH BETTER 
+
     // OPTIMISED ALGO
     timeval startoptim, endoptim;
 

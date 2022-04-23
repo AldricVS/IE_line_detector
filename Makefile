@@ -25,6 +25,9 @@ main_threaded :
 compare : 
 	g++ -o bin/comparison compare_algos.cpp $(OPTIM_FILES) $(BASE_ALGO_FILES) $(METRIC_FILES) `pkg-config --cflags --libs opencv` -lpthread -g -Wall
 
+compare_theta : 
+	g++ -o bin/cmp_theta compare_thetaSteps.cpp $(OPTIM_FILES) $(BASE_ALGO_FILES) $(METRIC_FILES) `pkg-config --cflags --libs opencv` -lpthread -Wall
+
 create_images : 
 	g++ -o bin/create_images create_images.cpp `pkg-config --cflags --libs opencv` -lpthread -g -Wall
 
